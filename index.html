@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patent Search</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 Patent Search Application</h1>
+
+      <div class="search-row">
+        <!-- Search by Patent ID -->
+        <div class="search-section">
+          <h2>1. Search by Patent ID</h2>
+          <div class="form-group">
+            <label>Patent IDs:</label>
+            <input
+              type="text"
+              id="patentInput"
+              placeholder="Type Patent ID and press Enter"
+              style="margin-bottom: 5px"
+            />
+            <div id="patentTags"></div>
+          </div>
+
+          <button onclick="searchByPatent()">Search Patent</button>
+
+          <!-- Context Actions: shown only for single patent -->
+          <div
+            id="contextActions"
+            class="context-actions"
+            style="display: none"
+          >
+            <h2>Explore Related Stats</h2>
+            <div class="context-buttons">
+              <span id="examinerWrap">
+                <button onclick="exploreContext('examiner')">
+                  📊 Examiner Stats
+                </button>
+              </span>
+
+              <span id="lawFirmWrap">
+                <button onclick="exploreContext('lawfirm')">
+                  🏢 Law Firm Stats
+                </button>
+              </span>
+              <span id="attorneyWrap">
+                <button onclick="exploreContext('attorney')">
+                  👩‍⚖️ Attorney Stats
+                </button>
+              </span>
+              <span id="gauwrap">
+                <button onclick="exploreContext('gau')">🧩 GAU Stats</button>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Search by Examiner -->
+        <div class="search-section">
+          <h2>2. Search by Examiners Name</h2>
+          <div class="form-group">
+            <label>Examiner Names:</label>
+            <input
+              type="text"
+              id="examinerInput"
+              placeholder="Type examiner name and press Enter"
+              style="margin-bottom: 5px"
+            />
+
+            <div id="examinerTags"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Search Type:</label>
+            <div class="radio-group">
+              <label
+                ><input
+                  type="radio"
+                  name="examinerType"
+                  value="latest_filed"
+                  checked
+                />
+                All Applications</label
+              >
+              <label
+                ><input
+                  type="radio"
+                  name="examinerType"
+                  value="latest_approved"
+                />
+                Latest Issued</label
+              >
+
+              <label
+                ><input
+                  type="radio"
+                  name="examinerType"
+                  value="last_10_years"
+                />
+                Last 10 Years</label
+              >
+              <label
+                ><input
+                  type="radio"
+                  name="examinerType"
+                  value="latest_10_approved"
+                />
+                Latest 10 Years Issued</label
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Results Limit:</label>
+            <input
+              type="text"
+              id="examinerLimit"
+              value="10"
+              style="width: 100px"
+            />
+          </div>
+
+          <button onclick="searchByExaminer()">Search Examiner</button>
+        </div>
+
+        <div class="search-section">
+          <h2>3. Search by Law Firm</h2>
+
+          <div class="form-group">
+            <label>Law Firm Names:</label>
+            <input
+              type="text"
+              id="lawfirmInput"
+              placeholder="Type law firm name and press Enter"
+              style="margin-bottom: 5px"
+            />
+            <div id="lawfirmTags"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Search Type:</label>
+            <div class="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="lawfirmType"
+                  value="latest_filed"
+                  checked
+                />
+                All Applications
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="lawfirmType"
+                  value="latest_approved"
+                />
+                Latest Issued
+              </label>
+
+              <label>
+                <input type="radio" name="lawfirmType" value="last_10_years" />
+                Last 10 Years
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="lawfirmType"
+                  value="latest_10_approved"
+                />
+                Latest 10 Years Issued
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Results Limit:</label>
+            <input
+              type="text"
+              id="lawfirmLimit"
+              value="10"
+              style="width: 100px"
+            />
+          </div>
+
+          <button onclick="searchByLawFirm()">Search Law Firm</button>
+        </div>
+        <div class="search-section">
+          <h2>4. Search by Prosecutors Names</h2>
+
+          <div class="form-group">
+            <label>Prosecutors Names:</label>
+            <input
+              type="text"
+              id="prosecutorInput"
+              placeholder="Type Prosecutor name and press Enter"
+              style="margin-bottom: 5px"
+            />
+            <div id="prosecutorTags"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Search Type:</label>
+            <div class="radio-group">
+              <label>
+                <input
+                  type="radio"
+                  name="prosecutorType"
+                  value="latest_filed"
+                  checked
+                />
+                All Applications
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="prosecutorType"
+                  value="latest_approved"
+                />
+                Latest Issued
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="prosecutorType"
+                  value="last_10_years"
+                />
+                Last 10 Years
+              </label>
+
+              <label>
+                <input
+                  type="radio"
+                  name="prosecutorType"
+                  value="latest_10_approved"
+                />
+                Latest 10 Issued
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Results Limit:</label>
+            <input
+              type="text"
+              id="prosecutorLimit"
+              value="10"
+              style="width: 100px"
+            />
+          </div>
+
+          <button onclick="searchByProsecutor()">Search Prosecutor</button>
+        </div>
+
+        <div class="search-section">
+          <h2>5. Examiner Stats by Date Range</h2>
+
+          <!-- <div class="form-group">
+            <label>Stats Type:</label>
+            <select id="statsType">
+              <option value="examiner">Examiner</option>
+              <option value="prosecutor">Prosecutor</option>
+              <option value="lawfirm">Law Firm</option>
+            </select>
+          </div> -->
+          <div class="form-group">
+            <label>From Date:</label>
+            <input type="date" id="fromDate" />
+          </div>
+
+          <div class="form-group">
+            <label>To Date:</label>
+            <input type="date" id="toDate" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Number of top Examiners Stats:</label>
+            <input type="number" id="examinerStatsLimit" value="10" min="1" />
+          </div>
+
+          <button onclick="searchExaminerStatsByDate()">
+            📈 Get Examiner Stats
+          </button>
+        </div>
+
+        <div class="search-section">
+          <h2>6. Examiner, Lawfirm & Prosecutor Stats by Date Range</h2>
+
+          <div class="form-group">
+            <label>Stats Type:</label>
+            <select id="statsType">
+              <option value="examiner">Examiner</option>
+              <option value="prosecutor">Prosecutor</option>
+              <option value="lawfirm">Law Firm</option>
+
+              <!-- NEW STATS TYPES -->
+              <option value="gau">GAU</option>
+              <option value="assignee">Assignee</option>
+              <option value="usc">USC Class</option>
+              <option value="entity">Entity Type</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>From Date:</label>
+            <input type="date" id="fromDateAll" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>To Date:</label>
+            <input type="date" id="toDateAll" readonly />
+          </div>
+
+          <div class="form-group">
+            <label>Sort By:</label>
+            <select id="statsSortOrder">
+              <option value="desc" selected>Top (Descending)</option>
+              <option value="asc">Least (Ascending)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label id="statsLimitLabel">Number of Top Stats:</label>
+            <input type="number" id="allStatsLimit" value="10" min="1" />
+          </div>
+
+          <button id="getStatsBtn" onclick="searchStatsByDateRange()">
+            📈 Get Examiner Stats
+          </button>
+        </div>
+
+        <!-- <div class="search-section">
+          <h2>5. Advanced Search (No Solr Knowledge Needed)</h2>
+
+          <div id="advancedFilters"></div>
+
+          <button onclick="addAdvancedFilter()">➕ Add Filter</button>
+
+          <div class="form-group">
+            <label>Sort By:</label>
+            <select id="advancedSortField">
+              <option value="">None</option>
+              <option value="app_date">Application Date</option>
+              <option value="app_date_year">Application Year</option>
+              <option value="disposal_type">Disposal Type</option>
+            </select>
+
+            <select id="advancedSortOrder">
+              <option value="desc">Descending</option>
+              <option value="asc">Ascending</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Results Limit:</label>
+            <input type="number" id="advancedLimit" value="10" />
+          </div>
+
+          <button onclick="searchAdvanced()">🔍 Search</button>
+        </div> -->
+      </div>
+
+      <!-- For Prosecutors  -->
+
+      <!-- Solr Query URL Display -->
+      <div id="urlDisplay" class="url-display">
+        <h3>Solr Query URL:</h3>
+        <div class="url-text" id="urlText"></div>
+        <button onclick="executeQuery()">Execute Query</button>
+        <button onclick="executeQueryManually()">Execute Query Manually</button>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="loading" class="loading">
+        <p>Loading...</p>
+      </div>
+      <!-- Error Message -->
+      <div id="error" class="error"></div>
+      <!-- Results Section -->
+      <div id="results" class="results">
+        <div class="results-header">
+          <h2 id="resultsTitle">Results</h2>
+          <span id="resultCount">0 results</span>
+        </div>
+        <div class="results-body">
+          <div
+            class="download-buttons"
+            id="downloadButtons"
+            style="margin-bottom: 5px"
+          >
+            <button class="secondary" onclick="downloadJSON()">
+              Download JSON
+            </button>
+            <button class="secondary" onclick="downloadExcel()">
+              Convert to Excel
+            </button>
+          </div>
+          <div id="resultsContainer"></div>
+        </div>
+      </div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
