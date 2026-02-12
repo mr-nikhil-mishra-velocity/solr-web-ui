@@ -1,774 +1,652 @@
-# Advanced Flexible Search - Complete Guide
+# Patent Search Application
+
+A comprehensive web-based application for searching and analyzing patent data using Apache Solr. This application provides an intuitive interface for querying patent information by various criteria including patent IDs, examiners, law firms, prosecutors, and more.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [API Documentation](#api-documentation)
+- [Frontend Usage](#frontend-usage)
+- [Data Model](#data-model)
+- [Troubleshooting](#troubleshooting)
+
+---
 
 ## Overview
 
-The **Advanced Search** interface provides complete flexibility to search, filter, group, and sort on **ANY field** in your Solr index.
+The Patent Search Application is a full-stack solution consisting of:
 
-Unlike the simple UI (which has 6 predefined search types), this advanced interface lets you:
-
-✅ Search on **any field** (examiner_name, GAU, art_unit, whatever you have)
-✅ **Group by** (facet on) any field  
-✅ **Order by** (sort) any field
-✅ Use **multiple filters** simultaneously
-✅ Use full **Solr query syntax**
-✅ Combine multiple operations in one query
+- **Backend**: FastAPI-based REST API that interfaces with Apache Solr
+- **Frontend**: Vanilla JavaScript web interface for intuitive search and visualization
+- **Data Source**: Apache Solr database containing patent information
 
 ---
 
-## Quick Examples
+## Features
 
-### Example 1: Search by Examiner Name
+### Search Capabilities
 
-**What you want**: Find all applications examined by "JOHN DOE"
+1. **Patent ID Search**: Search for specific patents by their ID(s)
+2. **Examiner Search**: Find patents handled by specific patent examiners
+3. **Law Firm Search**: Query patents by representing law firms
+4. **Prosecutor/Attorney Search**: Search by attorney or prosecutor names
+5. **GAU (Group Art Unit) Search**: Filter patents by GAU classification
+6. **Advanced Search**: Build complex queries with multiple filters
 
-**Simple Search Tab:**
-```
-Field Name: examiner_name
-Search Value: JOHN DOE
-Match Type: Exact Match
-```
+### Analytics & Statistics
 
-**Generated Solr Query:**
-```
-q=examiner_name:"JOHN DOE"&rows=10&wt=json
-```
+- **Examiner Statistics by Date Range**: Analyze examiner activity over time
+- **Multi-dimensional Stats**: Get statistics for examiners, prosecutors, law firms, GAUs, assignees, USC classes, and entity types
+- **GAU Distribution**: View unique GAU counts and distribution
+- **CPC Classification Analysis**: Analyze CPC (Cooperative Patent Classification) data
 
----
+### Export Features
 
-### Example 2: Group by GAU (Group Art Unit)
+- **JSON Export**: Download search results in JSON format
+- **Excel Export**: Convert results to Excel spreadsheet
 
-**What you want**: Count how many applications per GAU
+### Context-Aware Search
 
-**Group By Tab:**
-```
-Group By Field: gau
-Max Groups: 20
-```
+When viewing a single patent, explore related data:
 
-**Generated Solr Query:**
-```
-q=*:*&rows=0&facet=true&facet.field=gau&facet.limit=20&wt=json
-```
+- Patents by the same examiner
+- Patents from the same law firm
+- Patents by the same attorney/prosecutor
+- Patents in the same GAU
 
 ---
 
-### Example 3: Complex Search with Multiple Filters
+## Architecture
 
-**What you want**: Find applications:
-- From 2020
-- That are pending
-- Sorted by application date
-- Show only id, title, and examiner
-
-**Advanced Query Tab:**
 ```
-Main Query: *:*
-Filter Queries:
-  app_date_year:2020
-  disposal_type:pend
-Sort: app_date desc
-Fields to Return: id,title,examiner_name
-Rows: 20
-```
-
-**Generated Solr Query:**
-```
-q=*:*
-&fq=app_date_year:2020
-&fq=disposal_type:pend
-&sort=app_date desc
-&fl=id,title,examiner_name
-&rows=20
-&wt=json
+┌─────────────────┐
+│   Frontend      │
+│  (HTML/JS/CSS)  │
+└────────┬────────┘
+         │
+         │ HTTP/REST
+         │
+┌────────▼────────┐
+│   FastAPI       │
+│   Backend       │
+└────────┬────────┘
+         │
+         │ Solr API
+         │
+┌────────▼────────┐
+│  Apache Solr    │
+│   Database      │
+└─────────────────┘
 ```
 
 ---
 
-### Example 4: Group by Status for Specific Examiner
+## Prerequisites
 
-**What you want**: For examiner "JOHN DOE", how many applications are pending vs granted vs abandoned?
+- **Python**: 3.8 or higher
+- **Apache Solr**: Running instance with patent data indexed
+- **Node.js/npm**: Optional, for any build tools
+- **Modern Web Browser**: Chrome, Firefox, Safari, or Edge
 
-**Group By Tab:**
-```
-Group By Field: disposal_type
-Filter Field: examiner_name
-Filter Value: JOHN DOE
-```
+### Python Dependencies
 
-**Generated Solr Query:**
 ```
-q=examiner_name:"JOHN DOE"
-&rows=0
-&facet=true
-&facet.field=disposal_type
-&wt=json
-```
-
-**Result:**
-```json
-{
-  "groups": [
-    {"value": "pend", "count": 45},
-    {"value": "patented", "count": 23},
-    {"value": "abandoned", "count": 8}
-  ]
-}
+fastapi
+uvicorn
+httpx
+pandas
+openpyxl
+python-dotenv
+pydantic
 ```
 
 ---
 
-## Three Search Modes
+## Installation
 
-### Mode 1: Simple Search
-
-**Use Case:** Quick field-value searches
-
-**Perfect for:**
-- Search by examiner: `examiner_name = "JOHN DOE"`
-- Search by GAU: `gau = "2100"`
-- Search by art unit: `art_unit = "2155"`
-- Search by any single field
-
-**Features:**
-- Exact or partial matching
-- Optional sorting
-- Results limit control
-
-**API Endpoint:** `POST /search`
-
----
-
-### Mode 2: Advanced Query
-
-**Use Case:** Complex searches with multiple conditions
-
-**Perfect for:**
-- Multiple filters (year AND status AND examiner)
-- Wildcard searches (`title:*battery*`)
-- Boolean logic (`examiner_name:JOHN OR examiner_name:JANE`)
-- Faceting on multiple fields simultaneously
-- Pagination
-- Custom field selection
-
-**Features:**
-- Full Solr syntax support
-- Multiple filter queries (fq)
-- Faceting on multiple fields
-- Sort by any field
-- Field list (fl) to control returned fields
-- Pagination (start, rows)
-
-**API Endpoint:** `POST /advanced`
-
----
-
-### Mode 3: Group By
-
-**Use Case:** Analytics and counting
-
-**Perfect for:**
-- Count applications per examiner
-- Count applications per GAU
-- Status distribution for a law firm
-- Year-over-year statistics
-- Any field aggregation
-
-**Features:**
-- Group by any field
-- Optional filtering
-- Configurable group limit
-- Returns counts only (no documents)
-
-**API Endpoint:** `POST /group-by`
-
----
-
-## API Reference
-
-### 1. Simple Search
-
-**Endpoint:** `POST /search`
-
-**Request:**
-```json
-{
-  "field": "examiner_name",
-  "value": "JOHN DOE",
-  "exact_match": true,
-  "limit": 10,
-  "sort_by": "app_date desc"
-}
-```
-
-**Response:**
-```json
-{
-  "query": "examiner_name:\"JOHN DOE\"",
-  "total_found": 45,
-  "results": [
-    {
-      "id": "US123",
-      "title": "Some invention",
-      "examiner_name": "JOHN DOE",
-      ...
-    }
-  ],
-  "solr_url": "http://localhost:8983/solr/patents/select?..."
-}
-```
-
----
-
-### 2. Advanced Query
-
-**Endpoint:** `POST /advanced`
-
-**Request:**
-```json
-{
-  "q": "title:battery",
-  "fq": ["app_date_year:2020", "disposal_type:pend"],
-  "rows": 20,
-  "start": 0,
-  "sort": "app_date desc",
-  "fl": "id,title,app_date",
-  "facet": true,
-  "facet_field": ["disposal_type", "examiner_name"],
-  "facet_limit": 10
-}
-```
-
-**Response:**
-```json
-{
-  "query_params": {...},
-  "total_found": 234,
-  "start": 0,
-  "results": [...],
-  "facets": {
-    "disposal_type": [
-      {"value": "pend", "count": 150},
-      {"value": "patented", "count": 60}
-    ],
-    "examiner_name": [
-      {"value": "JOHN DOE", "count": 45},
-      {"value": "JANE SMITH", "count": 38}
-    ]
-  },
-  "solr_url": "..."
-}
-```
-
----
-
-### 3. Group By
-
-**Endpoint:** `POST /group-by`
-
-**Request:**
-```json
-{
-  "group_by_field": "gau",
-  "filter_field": "app_date_year",
-  "filter_value": "2020",
-  "limit": 20
-}
-```
-
-**Response:**
-```json
-{
-  "group_by_field": "gau",
-  "filter_applied": "app_date_year:2020",
-  "total_documents": 5432,
-  "groups": [
-    {"value": "2100", "count": 234},
-    {"value": "2600", "count": 189},
-    {"value": "3600", "count": 156}
-  ]
-}
-```
-
----
-
-## Real-World Use Cases
-
-### Use Case 1: Examiner Analysis
-
-**Question:** Which examiners have the most pending applications?
-
-**Solution:**
-```
-Group By Tab:
-  Group By Field: examiner_name
-  Filter Field: disposal_type
-  Filter Value: pend
-  Max Groups: 50
-```
-
-**Result:** Top 50 examiners by pending application count
-
----
-
-### Use Case 2: GAU Performance
-
-**Question:** For GAU 2100, what's the distribution of statuses?
-
-**Solution:**
-```
-Group By Tab:
-  Group By Field: disposal_type
-  Filter Field: gau
-  Filter Value: 2100
-```
-
-**Result:**
-```
-Pending: 245
-Granted: 123
-Abandoned: 45
-```
-
----
-
-### Use Case 3: Recent Applications by Attorney in Specific Tech Area
-
-**Question:** Show me recent applications by attorney "JOHN DOE" in technology class 700
-
-**Solution:**
-```
-Advanced Tab:
-  Main Query: all_attorney_names:"JOHN DOE"
-  Filter Queries:
-    uspc_class:700
-  Sort: app_date desc
-  Rows: 20
-```
-
----
-
-### Use Case 4: Year-over-Year Application Trends
-
-**Question:** How many applications per year for law firm "ABC Law"?
-
-**Solution:**
-```
-Group By Tab:
-  Group By Field: app_date_year
-  Filter Field: law_firm
-  Filter Value: abc law
-  Max Groups: 20
-```
-
-**Result:**
-```
-2024: 145
-2023: 167
-2022: 189
-2021: 203
-```
-
----
-
-## Solr Query Syntax Guide
-
-### Basic Queries
-
-```
-*:*                          → All documents
-title:battery                → Title contains "battery"
-title:"lithium battery"      → Exact phrase
-title:battery AND status:pend → Boolean AND
-title:battery OR title:solar  → Boolean OR
-title:batt*                  → Wildcard
-title:[A TO C]               → Range
-```
-
-### Filter Queries (fq)
-
-Multiple filters are ANDed together:
-```
-fq: app_date_year:2020
-fq: disposal_type:pend
-fq: examiner_name:"JOHN DOE"
-
-Result: Documents matching ALL three conditions
-```
-
-### Sorting
-
-```
-app_date desc                → Newest first
-id asc                       → Oldest first (by ID)
-examiner_name asc            → Alphabetical
-app_date desc, id asc        → Multi-field sort
-```
-
-### Field List (fl)
-
-```
-fl: *                        → All fields
-fl: id,title,app_date        → Only these fields
-fl: id,title,_score          → Include relevance score
-```
-
----
-
-## Common Field Names (USPTO Data)
-
-Based on your Solr schema, here are commonly available fields:
-
-### Identification
-- `id` - Application ID (e.g., US61708978)
-- `app_type` - Application type (provsnl, nonprov, etc.)
-
-### Dates
-- `app_date` - Application date
-- `app_date_year` - Application year
-- `app_status_date` - Status date
-
-### People & Organizations
-- `first_named_inventor` - Primary inventor
-- `all_applicants` - All applicants
-- `law_firm` - Law firm name
-- `all_attorney_names` - All attorney names
-- `all_attorney_registration_numbers` - Attorney registration numbers
-- `examiner_name` - Patent examiner (if available)
-
-### Classification
-- `gau` - Group Art Unit
-- `art_unit` - Art unit
-- `uspc_class` - US Patent Classification
-- `cpc_class` - Cooperative Patent Classification
-
-### Status
-- `disposal_type` - Status (pend, patented, abandoned)
-- `application_status` - Detailed status
-
-### Content
-- `title` - Application title
-- `abstract` - Abstract text
-- `claims` - Claims text
-
-### Administrative
-- `customer_number` - Customer number
-- `small_entity_indicator` - Entity size
-- `confirm_number` - Confirmation number
-
-**To see ALL fields in your Solr:**
-- Use the API: `GET http://localhost:8000/fields`
-- Or check Solr Admin UI: `http://localhost:8983/solr/#/patents/schema`
-
----
-
-## Getting Started
-
-### 1. Install and Run
+### 1. Clone the Repository
 
 ```bash
-# Backend (Advanced)
-cd backend
+git clone <repository-url>
+cd patent-search-app
+```
+
+### 2. Set Up Python Environment
+
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-python app_advanced.py
-
-# Frontend
-# Open frontend/advanced.html in browser
 ```
 
-### 2. Try Simple Searches
+### 3. Configure Environment Variables
 
-Start with the **Simple Search** tab:
-- Field: `law_firm`
-- Value: Your law firm name
-- Click Search
+Create a `.env` file in the project root:
 
-### 3. Experiment with Grouping
+```env
+SOLR_BASE_URL=http://localhost:8983/solr/your_core_name
+```
 
-Try the **Group By** tab:
-- Group By: `disposal_type`
-- See the distribution
+Replace `your_core_name` with your actual Solr core name.
 
-### 4. Master Advanced Queries
+### 4. Start the Backend Server
 
-Move to **Advanced Query** tab:
-- Start with `q=*:*`
-- Add one filter at a time
-- Enable faceting to see distributions
+```bash
+python main.py
+```
+
+The API will be available at `http://localhost:8000`
+
+### 5. Open the Frontend
+
+Open `index.html` in your web browser, or serve it using a simple HTTP server:
+
+```bash
+# Using Python
+python -m http.server 3000
+
+# Then navigate to http://localhost:3000
+```
 
 ---
 
-## Tips & Best Practices
+## Configuration
 
-### 1. Finding Field Names
+### Backend Configuration
 
-**Not sure what fields exist?**
-```bash
-# Use the /fields endpoint
-curl http://localhost:8000/fields
+Edit the `.env` file to configure:
+
+```env
+# Solr Configuration
+SOLR_BASE_URL=http://your-solr-host:8983/solr/core_name
+
+# Optional: Logging
+LOGGING_ENABLED=true
 ```
 
-**Or check one document:**
+### Frontend Configuration
+
+In `app.js`, update the API URL if needed:
+
+```javascript
+const API_URL = "http://localhost:8000"; // Change if backend runs on different host/port
 ```
-Advanced Tab:
-  Main Query: *:*
-  Rows: 1
-  
-Look at the returned fields
+
+---
+
+## API Documentation
+
+### Base URL
+
+```
+http://localhost:8000
 ```
 
-### 2. Testing Queries
+### Endpoints
 
-**Always test incrementally:**
-1. Start with simple query: `field:value`
-2. Add one filter
-3. Add another filter
-4. Add sorting
-5. Add faceting
+#### 1. Search Endpoints
 
-### 3. Performance
+##### Search by Patent ID
 
-**For large result sets:**
-- Use `fl` to limit returned fields
-- Use filters (`fq`) instead of query (`q`) when possible (better caching)
-- Set appropriate `rows` limit
-- Use faceting instead of retrieving all documents
+```http
+POST /search/patent
+Content-Type: application/json
 
-**Fast:**
-```json
 {
-  "q": "*:*",
-  "fq": ["app_date_year:2020", "disposal_type:pend"],
-  "fl": "id,title",
-  "rows": 10
+  "patent_ids": ["12345678", "87654321"]
 }
 ```
 
-**Slow:**
-```json
+##### Search by Examiner
+
+```http
+POST /search/examiner
+Content-Type: application/json
+
 {
-  "q": "app_date_year:2020 AND disposal_type:pend",
-  "fl": "*",
-  "rows": 1000
+  "examiners": ["john smith", "jane doe"],
+  "search_type": "latest_filed",
+  "limit": 10
 }
 ```
 
-### 4. Exact Matches
+**Search Types:**
 
-**For exact phrase matching, always use quotes:**
-```
-Good: law_firm:"smith and jones llp"
-Bad:  law_firm:smith and jones llp  (searches for "smith" anywhere!)
+- `latest_filed`: Most recently filed applications
+- `latest_approved`: Most recently issued patents
+- `count`: Get count only (no results)
+- `last_10_years`: Applications from last 10 years
+- `latest_10_approved`: Latest 10 approved patents
+
+##### Search by Law Firm
+
+```http
+POST /build/lawfirm-query
+Content-Type: application/json
+
+{
+  "lawfirms": ["wilson sonsini", "cooley llp"],
+  "search_type": "latest_filed",
+  "limit": 10
+}
 ```
 
-### 5. Wildcard Searches
+##### Search by Prosecutor
 
-**Wildcards work but can be slow:**
+```http
+POST /build/prosecutor-query
+Content-Type: application/json
+
+{
+  "prosecutors": ["attorney name"],
+  "search_type": "latest_filed",
+  "limit": 10
+}
 ```
-Fast:   title:battery
-Slower: title:*battery*
-Faster: title:battery*  (prefix wildcard is faster)
+
+##### Search by GAU
+
+```http
+POST /build/gau-query
+Content-Type: application/json
+
+{
+  "gaus": ["3682", "3685"],
+  "limit": 20,
+  "sort": "app_date desc"
+}
 ```
+
+#### 2. Statistics Endpoints
+
+##### Examiner Statistics by Date Range
+
+```http
+POST /stats/examiners-by-date
+Content-Type: application/json
+
+{
+  "from_date": "2023-01-01",
+  "to_date": "2024-01-01",
+  "limit": 10
+}
+```
+
+**Response includes:**
+
+- Application count per examiner
+- Unique GAU count
+- GAU distribution
+- CPC classification distribution
+
+##### General Statistics by Date Range
+
+```http
+POST /stats/by-date-range
+Content-Type: application/json
+
+{
+  "type": "examiner",
+  "from_date": "2023-01-01",
+  "to_date": "2024-01-01",
+  "limit": 10,
+  "sort_order": "desc"
+}
+```
+
+**Supported Types:**
+
+- `examiner`
+- `prosecutor`
+- `lawfirm`
+- `gau`
+- `assignee`
+- `usc`
+- `entity`
+- `action`
+
+##### Total Statistics
+
+```http
+GET /stats/total
+```
+
+Returns overall counts:
+
+- Total patents
+- Total approved
+- Total pending
+- Total abandoned
+
+#### 3. Query Building Endpoints
+
+These endpoints build Solr query URLs without executing them:
+
+- `POST /build/patent-query`
+- `POST /build/examiner-query`
+- `POST /build/lawfirm-query`
+- `POST /build/prosecutor-query`
+- `POST /build/attorney-query`
+- `POST /build/gau-query`
+- `POST /build/advanced-query`
+
+#### 4. Query Execution
+
+##### Execute Pre-built Query
+
+```http
+POST /execute-query
+Content-Type: application/json
+
+{
+  "solr_query_url": "http://solr-url/select?q=..."
+}
+```
+
+#### 5. Export Endpoints
+
+##### Download as JSON
+
+```http
+POST /download/json
+Content-Type: application/json
+
+{
+  "results": [...],
+  "total_found": 100
+}
+```
+
+##### Download as Excel
+
+```http
+POST /download/excel
+Content-Type: application/json
+
+{
+  "results": [...],
+  "total_found": 100
+}
+```
+
+---
+
+## Frontend Usage
+
+### 1. Search by Patent ID
+
+1. Type a patent ID in the input field
+2. Press **Enter** to add it as a tag
+3. Add multiple IDs if needed
+4. Click **Search Patent**
+5. View the generated Solr query URL
+6. Click **Execute Query** to fetch results
+
+### 2. Search by Examiner
+
+1. Enter examiner name(s) (press Enter after each)
+2. Select search type:
+   - All Applications
+   - Latest Issued
+   - Last 10 Years
+   - Latest 10 Years Issued
+3. Set results limit
+4. Click **Search Examiner**
+
+### 3. Search by Law Firm
+
+1. Enter law firm name(s)
+2. Choose search type
+3. Set limit
+4. Click **Search Law Firm**
+
+### 4. Context-Aware Exploration
+
+When viewing a single patent:
+
+1. Click **Examiner Stats** to see other patents by the same examiner
+2. Click **Law Firm Stats** to see other patents from the same firm
+3. Click **Attorney Stats** to see other patents by the same attorney
+4. Click **GAU Stats** to see other patents in the same GAU
+
+### 5. Statistics by Date Range
+
+1. Select date range (defaults to last 1 year)
+2. Choose statistic type (Examiner, Prosecutor, Law Firm, etc.)
+3. Select sort order (Top/Least)
+4. Set number of results
+5. Click **Get Stats**
+
+### 6. Viewing GAU Distribution
+
+When viewing examiner results:
+
+- GAU buttons appear showing the count of applications per GAU
+- Click any GAU button to search for all patents in that GAU
+
+### 7. Exporting Results
+
+After executing a search:
+
+1. Click **Download JSON** for JSON format
+2. Click **Convert to Excel** for Excel format
+
+---
+
+## Data Model
+
+### Patent Document Fields
+
+| Field                    | Type    | Description                                                 |
+| ------------------------ | ------- | ----------------------------------------------------------- |
+| `id`                     | String  | Unique patent application ID                                |
+| `title`                  | String  | Patent title                                                |
+| `app_date`               | Date    | Application date                                            |
+| `app_date_year`          | Integer | Application year                                            |
+| `disposal_type`          | String  | Status: `iss` (issued), `pend` (pending), `abn` (abandoned) |
+| `application_status`     | String  | Current status                                              |
+| `examiner`               | String  | Assigned patent examiner                                    |
+| `law_firm`               | Array   | Representing law firm(s)                                    |
+| `all_attorney_names`     | Array   | Attorney/prosecutor name(s)                                 |
+| `gau`                    | Array   | Group Art Unit code(s)                                      |
+| `cpc_classification`     | Array   | CPC classification code(s)                                  |
+| `usc`                    | String  | USC classification                                          |
+| `assignee_last`          | String  | Patent assignee                                             |
+| `small_entity_indicator` | Boolean | Small entity status                                         |
+| `first_named_inventor`   | String  | Primary inventor                                            |
+| `law_firm_address`       | String  | Law firm address                                            |
 
 ---
 
 ## Troubleshooting
 
-### "Field does not exist"
+### Common Issues
 
-**Problem:** Error says field doesn't exist
+#### 1. Cannot Connect to Backend
 
-**Solution:**
-1. Check spelling
-2. Get list of fields: `GET /fields`
-3. Verify field is indexed in Solr schema
+**Error**: `Failed to fetch` or CORS errors
 
-### "No results found"
+**Solution**:
 
-**Problem:** Query returns 0 results
+- Verify backend is running: `http://localhost:8000`
+- Check CORS configuration in `main.py`
+- Ensure frontend API_URL matches backend address
 
-**Solution:**
-1. Try broader query: `*:*`
-2. Remove filters one by one
-3. Check if data exists for that field value
-4. Verify exact match vs partial match
+#### 2. Solr Connection Failed
 
-### "Query syntax error"
+**Error**: `Failed to execute Solr query`
 
-**Problem:** Solr rejects query
+**Solution**:
 
-**Solution:**
-1. Check for special characters (escape or use quotes)
-2. Verify boolean operators are UPPERCASE (AND, OR, NOT)
-3. Check parentheses are balanced
-4. Use Simple Search tab to let backend build query
+- Verify Solr is running
+- Check `SOLR_BASE_URL` in `.env` file
+- Test Solr directly: `http://your-solr-url/solr/admin/cores`
 
-### Performance is slow
+#### 3. No Results Found
 
-**Problem:** Queries take too long
+**Possible Causes**:
 
-**Solution:**
-1. Reduce `rows` parameter
-2. Use `fl` to limit fields returned
-3. Add filters (`fq`) to narrow results
-4. Check Solr query logs
-5. Consider adding Solr caching
+- Data not indexed in Solr
+- Incorrect field names in queries
+- Case sensitivity issues
+
+**Solution**:
+
+- Verify data is indexed: Query Solr directly
+- Check field mappings in `STAT_TYPE_MAP`
+- Names are converted to lowercase automatically
+
+#### 4. Date Range Returns No Results
+
+**Solution**:
+
+- Ensure dates are in `YYYY-MM-DD` format
+- Verify data exists in the selected range
+- Check Solr date field format (`app_date`)
+
+#### 5. Statistics Not Loading
+
+**Solution**:
+
+- Increase timeout in `httpx.AsyncClient(timeout=120.0)`
+- Check Solr faceting configuration
+- Reduce date range or limit
+
+### Performance Tips
+
+1. **Large Result Sets**: Use pagination or limit results
+2. **Date Range Queries**: Narrow the date range for faster results
+3. **Statistics**: Reduce the limit parameter for complex aggregations
+4. **Caching**: Consider implementing Redis for frequently accessed queries
+
+### Logging
+
+Enable detailed logging by setting in `.env`:
+
+```env
+LOGGING_ENABLED=true
+```
+
+Check logs in the console output for debugging.
 
 ---
 
-## Migration from Simple UI
+## API Error Codes
 
-### Scenario 1: Search by Application ID
-
-**Simple UI:**
-```
-Select: "Search by Application ID"
-Enter ID: US123
-```
-
-**Advanced UI (Simple Search Tab):**
-```
-Field Name: id
-Search Value: US123
-Match Type: Exact Match
-```
-
-### Scenario 2: Latest Applications
-
-**Simple UI:**
-```
-Select: "Get Latest Applications"
-Number: 10
-```
-
-**Advanced UI (Advanced Query Tab):**
-```
-Main Query: *:*
-Sort: id desc
-Rows: 10
-```
-
-### Scenario 3: Count by Law Firm Status
-
-**Simple UI:**
-```
-Select: "Count Applications by Law Firm Status"
-Law Firm: abc law
-```
-
-**Advanced UI (Group By Tab):**
-```
-Group By Field: disposal_type
-Filter Field: law_firm
-Filter Value: abc law
-```
+| Status Code | Meaning                                     |
+| ----------- | ------------------------------------------- |
+| 200         | Success                                     |
+| 400         | Bad Request (invalid parameters)            |
+| 404         | Resource Not Found                          |
+| 500         | Internal Server Error                       |
+| 503         | Service Unavailable (Solr connection issue) |
 
 ---
 
-## Advanced Features
+## Development
 
-### Combining Multiple Facets
+### Project Structure
 
-**Question:** Show status distribution AND yearly distribution
+```
+patent-search-app/
+├── main.py                 # FastAPI backend
+├── app.js                  # Frontend JavaScript
+├── index.html              # Frontend HTML
+├── styles.css              # Frontend styles
+├── .env                    # Environment configuration
+├── requirements.txt        # Python dependencies
+├── logger/
+│   └── logger.py          # Logging configuration
+└── README.md              # This file
+```
 
-**Solution:**
-```json
-{
-  "q": "*:*",
-  "rows": 0,
-  "facet": true,
-  "facet_field": ["disposal_type", "app_date_year"]
+### Adding New Search Types
+
+1. **Backend**: Add new endpoint in `main.py`
+2. **Frontend**: Add UI controls in `index.html`
+3. **JavaScript**: Add handler function in `app.js`
+4. **Mapping**: Update `STAT_TYPE_MAP` if needed
+
+### Extending Statistics
+
+To add a new statistic type:
+
+1. Add to `STAT_TYPE_MAP` in `main.py`:
+
+```python
+STAT_TYPE_MAP = {
+    # ...existing mappings...
+    "new_type": "solr_field_name",
 }
 ```
 
-### Range Queries
+2. Add option in `index.html`:
 
-**Question:** Applications from 2018-2022
-
-**Solution:**
-```
-Advanced Tab:
-  Main Query: *:*
-  Filter Queries: app_date:[2018-01-01T00:00:00Z TO 2022-12-31T23:59:59Z]
-```
-
-### Negative Filters
-
-**Question:** Everything EXCEPT abandoned applications
-
-**Solution:**
-```
-Advanced Tab:
-  Filter Queries: -disposal_type:abandoned
-```
-
-### Proximity Searches
-
-**Question:** "battery" within 5 words of "lithium" in title
-
-**Solution:**
-```
-Advanced Tab:
-  Main Query: title:"battery lithium"~5
+```html
+<option value="new_type">New Type Display Name</option>
 ```
 
 ---
 
-## API Integration
+## API Interactive Documentation
 
-### Using in Your Application
+FastAPI provides automatic interactive API documentation:
 
-```python
-import requests
-
-# Simple search
-response = requests.post('http://localhost:8000/search', json={
-    'field': 'examiner_name',
-    'value': 'JOHN DOE',
-    'exact_match': True,
-    'limit': 10
-})
-
-results = response.json()
-print(f"Found {results['total_found']} applications")
-for app in results['results']:
-    print(f"  {app['id']}: {app.get('title', 'No title')}")
-```
-
-```javascript
-// JavaScript/Node.js
-const response = await fetch('http://localhost:8000/group-by', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-        group_by_field: 'gau',
-        limit: 20
-    })
-});
-
-const data = await response.json();
-data.groups.forEach(group => {
-    console.log(`GAU ${group.value}: ${group.count} applications`);
-});
-```
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
 
 ---
 
-## Summary
+## License
 
-The Advanced Search interface gives you **complete control** over Solr queries:
+[Add your license information here]
 
-✅ **Any Field** - Search, filter, group, sort on any field
-✅ **Three Modes** - Simple, Advanced, Group By for different use cases
-✅ **Full Power** - Access all Solr features
-✅ **User Friendly** - No need to write Solr queries manually
-✅ **Visual Results** - Tables and facet cards
-✅ **API First** - Easy to integrate with other tools
+---
 
-**Start Simple → Get Comfortable → Go Advanced**
+## Support
 
-1. Try Simple Search on known fields
-2. Experiment with Group By for analytics
-3. Master Advanced Query for complex searches
-4. Integrate with your workflows via API
+For issues, questions, or contributions:
 
-Happy Searching! 🔍
+- Open an issue in the repository
+- Contact the development team
+- Check existing documentation
+
+---
+
+## Future Enhancements
+
+Potential features for future versions:
+
+- User authentication and saved searches
+- Advanced visualization (charts, graphs)
+- Bulk export functionality
+- Real-time notifications
+- Search history
+- Collaborative features
+- Mobile responsive design improvements
+- API rate limiting
+- Caching layer (Redis)
+- Database backup and restore
+
+---
+
+## Version History
+
+- **v1.0.0**: Initial release with core search and statistics functionality
+
+---
+
+**Last Updated**: February 2026
