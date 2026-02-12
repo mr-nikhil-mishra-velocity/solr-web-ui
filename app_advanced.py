@@ -739,7 +739,7 @@ async def examiner_stats_by_date(request: ExaminerStatsByDateRequest):
                      "cpcs": {   # NEW FACET
                         "type": "terms",
                         "field": "cpc_classification",
-                        "limit": 10,
+                        "limit": -1,
                         "sort": "count desc",
                         "mincount": 1
                     }
@@ -831,7 +831,14 @@ async def stats_by_date_range(request: StatsByDateRangeRequest):
                             "field": "gau",
                             "limit": -1,
                             "sort": facet_sort
-                        }
+                        },
+                        "cpcs": {   # NEW FACET
+                            "type": "terms",
+                            "field": "cpc_classification",
+                            "limit": -1,
+                            "sort": "count desc",
+                            "mincount": 1
+                    }
                     }
                 }
             })
@@ -848,6 +855,7 @@ async def stats_by_date_range(request: StatsByDateRangeRequest):
 
         for b in buckets:
             gau_buckets = b.get("gaus", {}).get("buckets", [])
+            cpc_buckets = b.get("cpcs",{}).get("buckets",[])
 
             gaus = [
                 {
@@ -856,12 +864,22 @@ async def stats_by_date_range(request: StatsByDateRangeRequest):
                 }
                 for g in gau_buckets
             ]
+            
+            cpcs = [
+                {
+                    "cpc":g["val"],
+                    "application_count":g["count"],
+                }
+                for g in cpc_buckets
+            ]
 
             results.append({
                 request.type: b["val"],                     # dynamic key
                 "application_count": b["count"],
                 "unique_gau_count": len(gaus),
+                "unique_cpc_count":len(cpcs),
                 "gaus": gaus,
+                "cpcs":cpcs,
             })
 
         return {

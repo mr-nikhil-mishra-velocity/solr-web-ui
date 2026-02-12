@@ -873,13 +873,13 @@ function renderExaminerStats(data) {
     .map(
       (ex, i) => `
         <div class="result-card">
-          <h3>#${i + 1} ${ex.examiner}</h3>
+          <h3>#${i + 1} ${ex?.examiner}</h3>
 
-          <div><b>Total Applications:</b> ${ex.application_count}</div>
-          <div><b>Unique GAUs:</b> ${ex.unique_gau_count}</div>
+          <div><b>Total Applications:</b> ${ex?.application_count}</div>
+          <div><b>Unique GAUs:</b> ${ex?.unique_gau_count}</div>
 
           ${
-            ex.gaus && ex.gaus.length
+            ex?.gaus && ex?.gaus?.length
               ? `
                 <div class="gau-group">
                   <b>GAUs:</b>
@@ -890,10 +890,10 @@ function renderExaminerStats(data) {
                           (g) => `
                             <button
                               class="link-btn"
-                              onclick="searchByGAU('${g.gau}')"
+                              onclick="searchByGAU('${g?.gau}')"
                             >
-                              GAU ${g.gau}
-                              <span class="gau-count">(${g.application_count})</span>
+                              GAU ${g?.gau}
+                              <span class="gau-count">(${g?.application_count})</span>
                             </button>
                           `,
                         )
@@ -904,23 +904,23 @@ function renderExaminerStats(data) {
               `
               : ""
           }
-        <div><b>Unique CPCS(Only Top):</b> ${ex.unique_cpc_count}</div>
+        <div><b>Unique CPCS(Only Top):</b> ${ex?.unique_cpc_count}</div>
           ${
-            ex.cpcs && ex.cpcs.length
+            ex?.cpcs && ex?.cpcs?.length
               ? `
             <div class="cpc-group">
               <b>CPC Classifications:</b>
               <div class="gau-scroll">
                 <div class="gau-buttons cpc-button">
-                  ${ex.cpcs
+                  ${ex?.cpcs
                     .map(
                       (c) => `
                         <button
                           class="link-btn cpc-btn"
                           disabled
                         >
-                          ${c.cpc}
-                          <span class="gau-count">(${c.application_count})</span>
+                          ${c?.cpc}
+                          <span class="gau-count">(${c?.application_count})</span>
                         </button>
                       `,
                     )
@@ -997,29 +997,29 @@ function renderStatsResults(data, type) {
       <div class="result-card">
         <h3>#${index + 1} ${item[type]}</h3>
         <div class="result-field">
-        <div><b>Total Applications:</b> ${item.application_count}</div>
+        <div><b>Total Applications:</b> ${item?.application_count}</div>
           ${
-            item.unique_gau_count !== undefined
-              ? `<div><b>Unique GAUs:</b> ${item.unique_gau_count}</div>`
+            item?.unique_gau_count !== undefined
+              ? `<div><b>Unique GAUs:</b> ${item?.unique_gau_count}</div>`
               : ""
           }
        
           ${
-            item.gaus && item.gaus.length
+            item?.gaus && item?.gaus.length
               ? `
                 <div class="gau-group">
                   <b>GAUs:</b>
                   <div class="gau-scroll">
                     <div class="gau-buttons">
-                      ${item.gaus
+                      ${item?.gaus
                         .map(
                           (g) => `
                             <button
                               class="link-btn"
-                              onclick="searchByGAU('${g.gau}')"
+                              onclick="searchByGAU('${g?.gau}')"
                             >
-                              GAU ${g.gau}
-                              <span class="gau-count">(${g.application_count})</span>
+                              GAU ${g?.gau}
+                              <span class="gau-count">(${g?.application_count})</span>
                             </button>
                           `,
                         )
@@ -1030,6 +1030,38 @@ function renderStatsResults(data, type) {
               `
               : ""
           }
+          ${
+            item?.unique_cpc_count !== undefined
+              ? `<div><b>Unique CPCS(Only Top):</b> ${item?.unique_cpc_count}</div>`
+              : ""
+          }
+          ${
+            item.cpcs && item.cpcs.length
+              ? `
+            <div class="cpc-group">
+              <b>CPC Classifications:</b>
+              <div class="gau-scroll">
+                <div class="gau-buttons cpc-button">
+                  ${item?.cpcs
+                    .map(
+                      (c) => `
+                        <button
+                          class="link-btn cpc-btn"
+                          disabled
+                        >
+                          ${c?.cpc}
+                          <span class="gau-count">(${c?.application_count})</span>
+                        </button>
+                      `,
+                    )
+                    .join("")}
+                </div>
+              </div>
+            </div>
+          `
+              : ""
+          }
+        </div>
          
        </div>
       </div>
