@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000"; // Base API URL
+const API_URL = "http://tip-solr.veldev.com/api"; // Base API URL
 const MAX_VISIBLE_GAUS = 5;
 let currentResults = null; // Store search results for downloads
 let examiners = []; // Store examiner names
@@ -785,7 +785,7 @@ async function searchByGAU(gau) {
     limit: 20,
   };
 
-  const res = await fetch("http://localhost:8000/build/gau-query", {
+  const res = await fetch(`${API_URL}/build/gau-query`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
