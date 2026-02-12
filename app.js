@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", function () {
   const fromDateInput = document.getElementById("fromDateAll");
   const toDateInput = document.getElementById("toDateAll");
 
-  // const fromDate = document.getElementById("fromDate");
+  const fromDate = document.getElementById("fromDate");
   const toDate = document.getElementById("toDate");
 
   const today = new Date();
@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
   fromDateInput.value = formatDate(oneYearBack);
 
   toDate.value = formatDate(today);
-  // fromDate.value = formatDate(oneYearBack);
+  fromDate.value = formatDate(oneYearBack);
 });
 
 const sortDropdown = document.getElementById("statsSortOrder");
@@ -797,27 +797,6 @@ async function searchByGAU(gau) {
   showLoading(false);
 }
 
-// function renderExaminerResult(doc) {
-//   if (!doc.gau || !Array.isArray(doc.gau)) return "";
-
-//   const gauButtons = doc.gau
-//     .map(
-//       (g) =>
-//         `<button class="link-btn" onclick="searchByGAU('${g}')">${g}</button>`,
-//     )
-//     .join(" ");
-//   return `
-//     <div class="result-card">
-//       <div><b>Examiner:</b> ${doc.examiner}</div>
-//       <div>
-
-//         <div><b>GAU:</b> ${gauButtons}</div>
-//       </div>
-//       <div><b>Application:</b> ${doc.id}</div>
-//     </div>
-//   `;
-// }
-
 function extractGAUCounts(results) {
   const gauCountMap = {};
 
@@ -932,13 +911,13 @@ function renderExaminerStats(data) {
             <div class="cpc-group">
               <b>CPC Classifications:</b>
               <div class="gau-scroll">
-                <div class="gau-buttons">
+                <div class="gau-buttons cpc-button">
                   ${ex.cpcs
                     .map(
                       (c) => `
                         <button
-                          class="link-btn"
-                          
+                          class="link-btn cpc-btn"
+                          disabled
                         >
                           ${c.cpc}
                           <span class="gau-count">(${c.application_count})</span>

@@ -13,6 +13,12 @@ import io
 import pandas as pd
 from logger.logger import setup_logger
 import traceback
+import os
+from dotenv import load_dotenv
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
 logger = setup_logger(logging_enabled=True)
 
 app = FastAPI(title="Patent Search POC")
@@ -36,11 +42,12 @@ STAT_TYPE_MAP = {
     "action": "th_all_action",
 }
 
+load_dotenv()
 # Solr Configuration
-SOLR_BASE_URL = 
+SOLR_BASE_URL = os.getenv("SOLR_BASE_URL") 
 SOLR_CORE = ""
 
-
+print(SOLR_BASE_URL)
 class PatentSearchRequest(BaseModel):
     """
     This class is used to define the BaseModel for the Patents.

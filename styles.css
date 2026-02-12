@@ -347,3 +347,8 @@ button:disabled:hover {
   margin-top: 6px;
   padding-right: 4px;
 }
+
+.cpc-btn {
+  background: #9cebee; /* Green (different from GAU blue) */
+  color: rgb(0, 0, 0);
+}
