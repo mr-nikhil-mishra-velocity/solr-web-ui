@@ -904,7 +904,7 @@ function renderExaminerStats(data) {
               `
               : ""
           }
-        <div><b>Unique CPCS(Only Top):</b> ${ex?.unique_cpc_count}</div>
+        <div><b>Unique CPCS:</b> ${ex?.unique_cpc_count}</div>
           ${
             ex?.cpcs && ex?.cpcs?.length
               ? `

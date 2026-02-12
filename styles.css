@@ -352,3 +352,7 @@ button:disabled:hover {
   background: #9cebee; /* Green (different from GAU blue) */
   color: rgb(0, 0, 0);
 }
+
+.cpc-group {
+  margin-top: 5px;
+}
