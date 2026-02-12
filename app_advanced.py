@@ -37,7 +37,7 @@ STAT_TYPE_MAP = {
 }
 
 # Solr Configuration
-SOLR_BASE_URL = "http://admin:tipuser2023@44.214.190.56:7412/solr/triangleip"
+SOLR_BASE_URL = 
 SOLR_CORE = ""
 
 
