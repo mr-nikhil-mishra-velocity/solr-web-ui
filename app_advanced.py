@@ -835,7 +835,7 @@ async def stats_by_date_range(request: StatsByDateRangeRequest):
                         "cpcs": {   # NEW FACET
                             "type": "terms",
                             "field": "cpc_classification",
-                            "limit": -1,
+                            "limit": 20,
                             "sort": "count desc",
                             "mincount": 1
                     }

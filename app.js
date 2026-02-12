@@ -1032,7 +1032,7 @@ function renderStatsResults(data, type) {
           }
           ${
             item?.unique_cpc_count !== undefined
-              ? `<div><b>Unique CPCS(Only Top):</b> ${item?.unique_cpc_count}</div>`
+              ? `<div><b>Unique CPCS(Only Top 20):</b> ${item?.unique_cpc_count}</div>`
               : ""
           }
           ${
