@@ -1,4 +1,5 @@
 const API_URL = "http://tip-solr.veldev.com/api"; // Base API URL
+// const API_URL = "http://localhost:8000"; For locally.
 const MAX_VISIBLE_GAUS = 5;
 let currentResults = null; // Store search results for downloads
 let examiners = []; // Store examiner names

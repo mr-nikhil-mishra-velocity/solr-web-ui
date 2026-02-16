@@ -41,6 +41,9 @@ STAT_TYPE_MAP = {
     "entity": "small_entity_indicator",
     "action": "th_all_action",
 }
+# To run the project locally 
+#uvicorn app_advanced:app --host 0.0.0.0 --port 8000 --reload
+
 
 load_dotenv()
 # Solr Configuration
